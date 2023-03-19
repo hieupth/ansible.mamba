@@ -1,0 +1,4 @@
+#
+MAMBA_DIR: /opt/mambaforge
+#
+MAMBA_BIN: '{{ MAMBA_DIR }}/bin/mamba'

@@ -1,0 +1,42 @@
+-
+  name: Checking installation
+  stat:
+    path: '{{ MAMBA_BIN }}'
+  changed_when: false
+  register: mamba_bin_check
+-
+  when: not mamba_bin_check.stat.exists
+  block:
+    -
+      name: Getting arch
+      shell: echo $(uname)-$(uname -m)
+      register: arch
+    -
+      name: Download installer
+      get_url:
+        url: https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-{{ arch.stdout }}.sh
+        dest: /tmp/mamba_installer.sh
+        mode: 0555
+    -
+      name: Installing
+      become: true
+      shell: /tmp/mamba_installer.sh -b -p {{ MAMBA_DIR }}
+    -
+      name: Remove the installer
+      file:
+        state: absent
+        path: /tmp/mamba_installer.sh
+    -
+      name: Linking binary
+      become: true
+      shell: |
+        ln -sf {{ MAMBA_DIR }}/etc/profile.d/conda.sh /etc/profile.d/conda.sh
+        ln -sf {{ MAMBA_DIR }}/etc/profile.d/mamba.sh /etc/profile.d/mamba.sh
+    -
+      name: Restart sshd
+      service:
+        name: sshd
+        state: restarted
+-
+  name: checking installed version
+  shell: conda -V
